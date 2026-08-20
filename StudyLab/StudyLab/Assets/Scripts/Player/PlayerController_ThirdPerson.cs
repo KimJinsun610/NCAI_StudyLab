@@ -4,7 +4,7 @@ namespace VARCO_Workshop
 {
     [RequireComponent(typeof(Rigidbody))]
     [RequireComponent(typeof(CapsuleCollider))]
-    public class PlayerController_ThirdPerson : MonoBehaviour
+    public class PlayerController_ThirdPerson : MonoBehaviour, IExternalMoveOverride
     {
         [Header("이동(입력)")]
         public float moveSpeed     = 5f;

@@ -3,7 +3,7 @@ using UnityEngine;
 namespace VARCO_Workshop
 {
     [RequireComponent(typeof(CharacterController))]
-    public class PlayerController_Platform : MonoBehaviour
+    public class PlayerController_Platform : MonoBehaviour, IExternalMoveOverride
     {
         public float moveSpeed  = 6f;
         public float runMultiplier = 1.35f;
@@ -16,6 +16,11 @@ namespace VARCO_Workshop
         public Transform modelRoot;
         public bool respawnAtStartOnFall = true;
         public float fallRespawnY = -10f;
+
+        [Header("QA Input")]
+        [HideInInspector] public bool qaInputOverrideActive;
+        [HideInInspector] public Vector2 qaMoveInput;
+        [HideInInspector] public bool qaRunInput;
 
         CharacterController cc;
         Animator anim;
@@ -56,16 +61,21 @@ namespace VARCO_Workshop
                 return;
             }
 
-            var input = new Vector3(Input.GetAxisRaw("Horizontal"), 0f, lockZAxis ? 0f : Input.GetAxisRaw("Vertical"));
-            input = Vector3.ClampMagnitude(input, 1f);
+            var rawInput = qaInputOverrideActive
+                ? new Vector3(qaMoveInput.x, 0f, qaMoveInput.y)
+                : new Vector3(Input.GetAxisRaw("Horizontal"), 0f, lockZAxis ? 0f : Input.GetAxisRaw("Vertical"));
+            var input = Vector3.ClampMagnitude(rawInput, 1f);
 
-            isRunning = input.sqrMagnitude > 0.0001f && (Input.GetKey(runKey) || Input.GetKey(KeyCode.RightShift));
+            var runPressed = qaInputOverrideActive
+                ? qaRunInput
+                : (Input.GetKey(runKey) || Input.GetKey(KeyCode.RightShift));
+            isRunning = input.sqrMagnitude > 0.0001f && runPressed;
             var horizontal = ResolveMoveDirection(input) * moveSpeed * (isRunning ? Mathf.Max(1f, runMultiplier) : 1f);
             lastHorizontal = horizontal;
             if (cc.isGrounded && vel.y < 0f)
                 vel.y = -2f;
 
-            if (cc.isGrounded && Input.GetButtonDown("Jump"))
+            if (!qaInputOverrideActive && cc.isGrounded && Input.GetButtonDown("Jump"))
                 vel.y = jumpForce;
 
             vel.y += gravity * Time.deltaTime;
@@ -111,6 +121,20 @@ namespace VARCO_Workshop
             right.Normalize();
 
             return Vector3.ClampMagnitude(right * input.x + forward * input.z, 1f);
+        }
+
+        public void SetQaMoveInput(Vector2 input, bool run)
+        {
+            qaInputOverrideActive = true;
+            qaMoveInput = Vector2.ClampMagnitude(input, 1f);
+            qaRunInput = run;
+        }
+
+        public void ClearQaMoveInput()
+        {
+            qaInputOverrideActive = false;
+            qaMoveInput = Vector2.zero;
+            qaRunInput = false;
         }
 
         public void SetRespawnPoint(Vector3 position, Quaternion rotation)

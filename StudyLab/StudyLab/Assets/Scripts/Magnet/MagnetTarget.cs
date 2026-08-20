@@ -14,6 +14,11 @@ namespace VARCO_Workshop
         [Tooltip("이 거리 이내에서만 조준·선택 가능(플레이어 기준)")]
         public float maxRange = 8f;
 
+        [Header("무게")]
+        [Tooltip("무거울수록 자석으로 옮기고 돌릴 때 느려지고, 가벼운 물체(플레이어 포함)에 잘 안 밀립니다. " +
+            "Rigidbody.mass에 그대로 반영됩니다.")]
+        [Min(0.1f)] public float weight = 1f;
+
         [Header("하이라이트")]
         [Tooltip("조준만 하고 아직 선택 전일 때 표시할 색(원래 색상에 곱연산)")]
         public Color aimTint = new Color(0.4f, 0.9f, 1f, 1f);
@@ -34,6 +39,7 @@ namespace VARCO_Workshop
         void Awake()
         {
             Body = GetComponent<Rigidbody>();
+            Body.mass = weight; // 물리 충돌(밀림)도 무게에 맞게 반응하도록 Rigidbody.mass를 weight로 통일
             renderers = includeChildRenderers
                 ? GetComponentsInChildren<Renderer>(true)
                 : new[] { GetComponent<Renderer>() };
