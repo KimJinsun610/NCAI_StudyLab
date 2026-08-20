@@ -73,7 +73,6 @@ namespace VARCO_Workshop.Editor
 
             var magnet = GetOrAdd<MagnetAimController>(go);
             magnet.aimRange = 10f;
-            magnet.togglePolarityKey = KeyCode.Q;
 
             return go;
         }

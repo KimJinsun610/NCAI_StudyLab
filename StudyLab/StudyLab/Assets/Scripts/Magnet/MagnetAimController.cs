@@ -2,13 +2,12 @@ using UnityEngine;
 
 namespace VARCO_Workshop
 {
-    /// <summary>화면 중앙 조준으로 <see cref="MagnetTarget"/>을 찾아 강조 표시하고,
-    /// 좌클릭 1회로 당기기/밀기 힘을 토글 부착합니다. 플레이어 이동 컨트롤러와는 독립적으로 동작합니다.</summary>
+    /// <summary>화면 중앙 조준으로 <see cref="MagnetTarget"/>을 찾아 강조 표시하고, 좌클릭으로 선택/릴리즈합니다.
+    /// 선택 중에는 플레이어 이동이 잠기고, WASD/ZX/QE로 선택된 오브젝트를 염동력처럼 직접 조작합니다.
+    /// W/S=위/아래, A/D=좌우(플레이어 화면 기준), Z=당기기/X=밀기(플레이어 화면 기준 앞뒤), Q=X축 회전/E=Z축 회전(시계방향).</summary>
     [DisallowMultipleComponent]
     public class MagnetAimController : MonoBehaviour
     {
-        public enum Polarity { Pull, Push }
-
         [Header("조준")]
         [Tooltip("화면 중앙 기준 최대 조준 거리")]
         public float aimRange = 10f;
@@ -16,27 +15,28 @@ namespace VARCO_Workshop
         public LayerMask aimMask = ~0;
 
         [Header("입력")]
-        [Tooltip("당기기/밀기 극성 전환 키")]
-        public KeyCode togglePolarityKey = KeyCode.Q;
-        [Tooltip("부착/해제에 쓰일 마우스 버튼(0 = 좌클릭)")]
-        public int attachMouseButton = 0;
+        [Tooltip("선택/릴리즈에 쓰일 마우스 버튼(0 = 좌클릭)")]
+        public int selectMouseButton = 0;
+        [Tooltip("선택된 오브젝트의 이동 속도(m/s). W/S=위/아래, A/D=좌우, Z=당기기, X=밀기")]
+        public float moveSpeed = 4f;
+        [Tooltip("Q(X축)/E(Z축) 회전 속도(도/초, 시계방향)")]
+        public float rotateSpeed = 90f;
 
-        [Header("부착 상태")]
-        public Polarity currentPolarity = Polarity.Pull;
-        [Tooltip("부착된 대상이 이 거리를 벗어나면 자동 해제")]
+        [Header("범위")]
+        [Tooltip("선택된 오브젝트가 이 거리를 넘어서면 안전을 위해 자동으로 릴리즈됩니다")]
         public float autoDetachRange = 12f;
-        [Tooltip("당기는 중 이 거리보다 가까워지면 자동 해제(끼임 방지)")]
-        public float minPullDistance = 1.2f;
 
         public MagnetTarget CurrentAimTarget { get; private set; }
         public MagnetTarget AttachedTarget { get; private set; }
-        public Polarity AttachedPolarity { get; private set; }
 
         Camera cam;
+        PlayerController_ThirdPerson playerMover;
+        bool attachedGravityWasEnabled;
 
         void Awake()
         {
             cam = Camera.main;
+            playerMover = GetComponent<PlayerController_ThirdPerson>();
         }
 
         void Update()
@@ -48,15 +48,16 @@ namespace VARCO_Workshop
 
             UpdateAimTarget();
 
-            if (Input.GetKeyDown(togglePolarityKey))
-                currentPolarity = currentPolarity == Polarity.Pull ? Polarity.Push : Polarity.Pull;
-
-            if (Input.GetMouseButtonDown(attachMouseButton))
-                HandleAttachClick();
+            if (Input.GetMouseButtonDown(selectMouseButton))
+                HandleSelectClick();
         }
 
         void UpdateAimTarget()
         {
+            // 오브젝트를 선택 중일 때는 입력이 그 오브젝트 조작으로 전환되므로 조준을 다시 스캔하지 않습니다.
+            if (AttachedTarget)
+                return;
+
             MagnetTarget hitTarget = null;
             var ray = new Ray(cam.transform.position, cam.transform.forward);
             if (Physics.Raycast(ray, out var hit, aimRange, aimMask, QueryTriggerInteraction.Ignore))
@@ -69,47 +70,51 @@ namespace VARCO_Workshop
             if (hitTarget == CurrentAimTarget)
                 return;
 
-            // 부착 중인 대상의 강조는 조준이 벗어나도 계속 유지합니다.
-            if (CurrentAimTarget && CurrentAimTarget != AttachedTarget)
-                CurrentAimTarget.SetHighlighted(false);
+            if (CurrentAimTarget)
+                CurrentAimTarget.SetHighlightState(MagnetTarget.HighlightState.None);
 
             CurrentAimTarget = hitTarget;
 
-            if (CurrentAimTarget && CurrentAimTarget != AttachedTarget)
-                CurrentAimTarget.SetHighlighted(true);
+            if (CurrentAimTarget)
+                CurrentAimTarget.SetHighlightState(MagnetTarget.HighlightState.Aimable);
         }
 
-        void HandleAttachClick()
+        void HandleSelectClick()
         {
             if (AttachedTarget)
             {
-                // 이미 부착 중: 같은 대상을 다시 조준 중일 때만 해제. 다른 대상을 조준 중이면 먼저 해제해야 함.
-                if (AttachedTarget == CurrentAimTarget)
-                    Detach();
+                Release();
                 return;
             }
 
             if (!CurrentAimTarget)
                 return;
 
-            var target = CurrentAimTarget;
-            var polarityAccepted = currentPolarity == Polarity.Pull ? target.acceptsPull : target.acceptsPush;
-            if (!polarityAccepted)
-                return;
+            AttachedTarget = CurrentAimTarget;
+            AttachedTarget.SetHighlightState(MagnetTarget.HighlightState.Selected);
 
-            AttachedTarget = target;
-            AttachedPolarity = currentPolarity;
-            AttachedTarget.SetHighlighted(true);
+            var rb = AttachedTarget.Body;
+            attachedGravityWasEnabled = rb.useGravity;
+            rb.useGravity = false;
+            SetBodyVelocity(rb, Vector3.zero);
+
+            if (playerMover)
+                playerMover.SetQaMoveInput(Vector2.zero, false);
         }
 
-        void Detach()
+        void Release()
         {
             if (!AttachedTarget)
                 return;
 
-            var stillAimed = AttachedTarget == CurrentAimTarget;
-            AttachedTarget.SetHighlighted(stillAimed);
+            var rb = AttachedTarget.Body;
+            rb.useGravity = attachedGravityWasEnabled;
+
+            AttachedTarget.SetHighlightState(MagnetTarget.HighlightState.None);
             AttachedTarget = null;
+
+            if (playerMover)
+                playerMover.ClearQaMoveInput();
         }
 
         void FixedUpdate()
@@ -117,39 +122,60 @@ namespace VARCO_Workshop
             if (!AttachedTarget)
                 return;
 
-            var toTarget = AttachedTarget.transform.position - transform.position;
+            var rb = AttachedTarget.Body;
+            var toTarget = rb.position - transform.position;
             var dist = toTarget.magnitude;
-
-            if (dist > autoDetachRange || dist > AttachedTarget.maxRange
-                || (AttachedPolarity == Polarity.Pull && dist < minPullDistance))
+            if (dist > autoDetachRange || dist > AttachedTarget.maxRange)
             {
-                Detach();
+                Release();
                 return;
             }
 
-            if (dist < 0.001f)
-                return;
+            var camT = cam.transform;
+            var forward = Vector3.ProjectOnPlane(camT.forward, Vector3.up).normalized;
+            var right = Vector3.ProjectOnPlane(camT.right, Vector3.up).normalized;
 
-            var towardPlayer = -toTarget / dist;
-            var awayFromPlayer = toTarget / dist;
-            var forceDir = AttachedPolarity == Polarity.Pull ? towardPlayer : awayFromPlayer;
+            var goUp = Input.GetKey(KeyCode.W) ? 1f : 0f;
+            var goDown = Input.GetKey(KeyCode.S) ? 1f : 0f;
+            var goLeft = Input.GetKey(KeyCode.A) ? 1f : 0f;
+            var goRight = Input.GetKey(KeyCode.D) ? 1f : 0f;
+            var pull = Input.GetKey(KeyCode.Z) ? 1f : 0f;
+            var push = Input.GetKey(KeyCode.X) ? 1f : 0f;
 
-            var rb = AttachedTarget.Body;
-            var strength = AttachedTarget.forceStrength;
-            if (AttachedTarget.ignoreMassForForce)
-                rb.AddForce(forceDir * strength, ForceMode.Acceleration);
-            else
-                rb.AddForce(forceDir * strength, ForceMode.Force);
+            var moveDir = Vector3.up * (goUp - goDown)
+                        + right * (goRight - goLeft)
+                        + forward * (push - pull);
+            if (moveDir.sqrMagnitude > 1f)
+                moveDir.Normalize();
+
+            SetBodyVelocity(rb, moveDir * moveSpeed);
+
+            // 시계방향 회전: Q = X축, E = Z축 (월드 기준, 각각 양의 오일러각이 시계방향)
+            var rotateX = Input.GetKey(KeyCode.Q) ? rotateSpeed * Time.fixedDeltaTime : 0f;
+            var rotateZ = Input.GetKey(KeyCode.E) ? rotateSpeed * Time.fixedDeltaTime : 0f;
+            if (rotateX != 0f || rotateZ != 0f)
+            {
+                var delta = Quaternion.Euler(rotateX, 0f, rotateZ);
+                rb.MoveRotation(delta * rb.rotation);
+            }
+        }
+
+        static void SetBodyVelocity(Rigidbody rb, Vector3 v)
+        {
+#if UNITY_6000_0_OR_NEWER
+            rb.linearVelocity = v;
+#else
+            rb.velocity = v;
+#endif
         }
 
         void OnDisable()
         {
             if (CurrentAimTarget && CurrentAimTarget != AttachedTarget)
-                CurrentAimTarget.SetHighlighted(false);
+                CurrentAimTarget.SetHighlightState(MagnetTarget.HighlightState.None);
             if (AttachedTarget)
-                AttachedTarget.SetHighlighted(false);
+                Release();
 
-            AttachedTarget = null;
             CurrentAimTarget = null;
         }
     }

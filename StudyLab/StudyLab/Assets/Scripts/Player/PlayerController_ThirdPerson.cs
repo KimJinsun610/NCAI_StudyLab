@@ -41,6 +41,10 @@ namespace VARCO_Workshop
         [Tooltip("지면에 붙일 때의 아래로 미세한 속도(떠다님 감소)")]
         public float groundedDownVel = -0.2f;
 
+        [Header("점프")]
+        [Tooltip("점프 시 위로 가해지는 초기 수직 속도")]
+        public float jumpForce = 7f;
+
         Rigidbody       rb;
         CapsuleCollider cap;
         Vector3         moveInput;
@@ -52,6 +56,7 @@ namespace VARCO_Workshop
         bool            hasVisualTargetRotation;
         Vector3         lastFacingDirection;
         bool            isRunning;
+        bool            jumpQueued;
         public Transform modelRoot;
         PhysicsMaterial noFrictionMaterial;
 
@@ -133,10 +138,15 @@ namespace VARCO_Workshop
                     SetFacingDirection(moveDir);
             }
 
+            // 점프 입력은 여기서 큐에 담아두고(GetButtonDown은 한 프레임만 true), FixedUpdate에서 접지 상태일 때 소비합니다.
+            if (!qaInputOverrideActive && Input.GetButtonDown("Jump"))
+                jumpQueued = true;
+
             if (anim)
             {
                 SetAnimatorBoolIfExists(PlayerAnimParams.IsWalk, !movementLocked && moveDir.sqrMagnitude > 0.0001f);
                 SetAnimatorBoolIfExists(PlayerAnimParams.IsRun, !movementLocked && isRunning);
+                SetAnimatorBoolIfExists(PlayerAnimParams.IsJump, !IsGrounded());
             }
         }
 
@@ -170,6 +180,7 @@ namespace VARCO_Workshop
 
             if (health != null && !health.IsAlive)
             {
+                jumpQueued = false;
                 v.x = 0f;
                 v.z = 0f;
                 if (lockInitialY) v.y = 0f;
@@ -191,10 +202,19 @@ namespace VARCO_Workshop
             if (lockInitialY)
             {
                 v.y = 0f;
+                jumpQueued = false;
             }
             else if (grounded)
             {
-                if (v.y < 0f) v.y = groundedDownVel;
+                if (jumpQueued)
+                {
+                    v.y = jumpForce;
+                    jumpQueued = false;
+                }
+                else if (v.y < 0f)
+                {
+                    v.y = groundedDownVel;
+                }
             }
             else
                 v.y += gravity * Time.fixedDeltaTime;

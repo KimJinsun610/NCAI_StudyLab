@@ -2,33 +2,28 @@ using UnityEngine;
 
 namespace VARCO_Workshop
 {
-    /// <summary>자석 상호작용이 가능한 오브젝트 마커. 힘은 이 컴포넌트가 아니라 <see cref="MagnetAimController"/>가 가합니다.</summary>
+    /// <summary>염동력(자석)으로 조작 가능한 오브젝트 마커. 실제 이동/회전은 여기서 하지 않고
+    /// <see cref="MagnetAimController"/>가 선택 중인 동안 이 오브젝트의 Rigidbody를 직접 조작합니다.</summary>
     [RequireComponent(typeof(Rigidbody))]
     [DisallowMultipleComponent]
     public class MagnetTarget : MonoBehaviour
     {
-        [Header("자석 반응")]
-        [Tooltip("당기기(Pull) 힘을 받을 수 있는지")]
-        public bool acceptsPull = true;
-        [Tooltip("밀어내기(Push) 힘을 받을 수 있는지")]
-        public bool acceptsPush = true;
+        public enum HighlightState { None, Aimable, Selected }
 
-        [Header("범위 / 세기")]
-        [Tooltip("이 거리 이내에서만 조준·부착 가능(플레이어 기준)")]
+        [Header("범위")]
+        [Tooltip("이 거리 이내에서만 조준·선택 가능(플레이어 기준)")]
         public float maxRange = 8f;
-        [Tooltip("매 FixedUpdate 가해지는 힘의 세기(질량이 클수록 체감 가속은 작아짐)")]
-        public float forceStrength = 40f;
-        [Tooltip("켜면 forceStrength를 그대로 가속도로 사용(질량 무시), 끄면 AddForce로 질량이 반영됨")]
-        public bool ignoreMassForForce = false;
 
         [Header("하이라이트")]
-        [Tooltip("강조 시 원래 색상에 곱해줄 틴트")]
-        public Color highlightTint = new Color(0.4f, 0.9f, 1f, 1f);
+        [Tooltip("조준만 하고 아직 선택 전일 때 표시할 색(원래 색상에 곱연산)")]
+        public Color aimTint = new Color(0.4f, 0.9f, 1f, 1f);
+        [Tooltip("선택되어 자석 기능이 적용 중일 때 표시할 색(원래 색상에 곱연산)")]
+        public Color selectedTint = new Color(1f, 0.85f, 0.1f, 1f);
         [Tooltip("자기 자신뿐 아니라 자식의 Renderer도 모두 강조 대상에 포함")]
         public bool includeChildRenderers = true;
 
         public Rigidbody Body { get; private set; }
-        public bool IsHighlighted { get; private set; }
+        public HighlightState CurrentHighlight { get; private set; } = HighlightState.None;
 
         Renderer[] renderers;
         MaterialPropertyBlock mpb;
@@ -43,14 +38,35 @@ namespace VARCO_Workshop
                 ? GetComponentsInChildren<Renderer>(true)
                 : new[] { GetComponent<Renderer>() };
             mpb = new MaterialPropertyBlock();
+
+            if (renderers == null || renderers.Length == 0 || System.Array.TrueForAll(renderers, r => !r))
+            {
+                Debug.LogWarning($"[VARCO 자석] '{name}'에서 강조 표시할 Renderer를 찾지 못했습니다. " +
+                    "includeChildRenderers 설정과 자식 오브젝트의 MeshRenderer/SkinnedMeshRenderer 유무를 확인하세요.", this);
+                return;
+            }
+
+            foreach (var r in renderers)
+            {
+                if (!r || !r.sharedMaterial) continue;
+                if (!r.sharedMaterial.HasProperty(BaseColorId) && !r.sharedMaterial.HasProperty(ColorId))
+                    Debug.LogWarning($"[VARCO 자석] '{r.name}'의 머티리얼('{r.sharedMaterial.shader.name}')에 " +
+                        "_BaseColor/_Color 프로퍼티가 없어 하이라이트 색이 적용되지 않을 수 있습니다.", r);
+            }
+
+            if (!GetComponentInChildren<Collider>())
+                Debug.LogWarning($"[VARCO 자석] '{name}'에 Collider가 없어 조준 레이캐스트에 걸리지 않습니다. " +
+                    "임포트한 모델이라면 BoxCollider 등을 직접 추가해야 조준·강조·선택이 동작합니다.", this);
         }
 
-        public void SetHighlighted(bool on)
+        public void SetHighlightState(HighlightState state)
         {
-            if (IsHighlighted == on)
+            if (CurrentHighlight == state)
                 return;
 
-            IsHighlighted = on;
+            CurrentHighlight = state;
+            Debug.Log($"[VARCO 자석] '{name}' 하이라이트 상태 -> {state}", this);
+
             if (renderers == null)
                 return;
 
@@ -59,8 +75,13 @@ namespace VARCO_Workshop
                 if (!r) continue;
 
                 r.GetPropertyBlock(mpb);
-                if (on)
+                if (state == HighlightState.None)
                 {
+                    mpb.Clear();
+                }
+                else
+                {
+                    var tint = state == HighlightState.Selected ? selectedTint : aimTint;
                     var baseColor = Color.white;
                     if (r.sharedMaterial)
                     {
@@ -70,13 +91,9 @@ namespace VARCO_Workshop
                             baseColor = r.sharedMaterial.GetColor(ColorId);
                     }
 
-                    var tinted = baseColor * highlightTint;
+                    var tinted = baseColor * tint;
                     mpb.SetColor(BaseColorId, tinted);
                     mpb.SetColor(ColorId, tinted);
-                }
-                else
-                {
-                    mpb.Clear();
                 }
 
                 r.SetPropertyBlock(mpb);
@@ -85,8 +102,8 @@ namespace VARCO_Workshop
 
         void OnDisable()
         {
-            if (IsHighlighted)
-                SetHighlighted(false);
+            if (CurrentHighlight != HighlightState.None)
+                SetHighlightState(HighlightState.None);
         }
     }
 }
