@@ -4,7 +4,7 @@ namespace VARCO_Workshop
 {
     /// <summary>화면 중앙 조준으로 <see cref="MagnetTarget"/>을 찾아 강조 표시하고, 좌클릭으로 선택/릴리즈합니다.
     /// 선택 중에는 플레이어 이동이 잠기고, WASD/ZX/QE로 선택된 오브젝트를 염동력처럼 직접 조작합니다.
-    /// W=밀기/S=당기기(플레이어 화면 기준 앞뒤), A/D=좌우(플레이어 화면 기준), Z/X=위/아래, Q=X축 회전/E=Z축 회전(시계방향).</summary>
+    /// W=밀기/S=당기기(플레이어 화면 기준 앞뒤), A/D=좌우(플레이어 화면 기준), Z/X=위/아래, Q=X축 회전/E=Y축 회전(시계방향).</summary>
     [DisallowMultipleComponent]
     public class MagnetAimController : MonoBehaviour
     {
@@ -19,7 +19,7 @@ namespace VARCO_Workshop
         public int selectMouseButton = 0;
         [Tooltip("선택된 오브젝트의 이동 속도(m/s). W=밀기, S=당기기, A/D=좌우, Z/X=위/아래")]
         public float moveSpeed = 4f;
-        [Tooltip("Q(X축)/E(Z축) 회전 속도(도/초, 시계방향)")]
+        [Tooltip("Q(X축)/E(Y축) 회전 속도(도/초, 시계방향)")]
         public float rotateSpeed = 90f;
 
         [Header("범위")]
@@ -192,12 +192,12 @@ namespace VARCO_Workshop
 
             DriveTowardVelocity(rb, moveDir * moveSpeed * weightScale);
 
-            // 시계방향 회전: Q = X축, E = Z축 (월드 기준, 각각 양의 오일러각이 시계방향)
+            // 시계방향 회전: Q = X축, E = Y축 (월드 기준, 각각 양의 오일러각이 시계방향)
             var rotateX = Input.GetKey(KeyCode.Q) ? rotateSpeed * weightScale * Time.fixedDeltaTime : 0f;
-            var rotateZ = Input.GetKey(KeyCode.E) ? rotateSpeed * weightScale * Time.fixedDeltaTime : 0f;
-            if (rotateX != 0f || rotateZ != 0f)
+            var rotateY = Input.GetKey(KeyCode.E) ? rotateSpeed * weightScale * Time.fixedDeltaTime : 0f;
+            if (rotateX != 0f || rotateY != 0f)
             {
-                var delta = Quaternion.Euler(rotateX, 0f, rotateZ);
+                var delta = Quaternion.Euler(rotateX, rotateY, 0f);
                 rb.MoveRotation(delta * rb.rotation);
             }
         }

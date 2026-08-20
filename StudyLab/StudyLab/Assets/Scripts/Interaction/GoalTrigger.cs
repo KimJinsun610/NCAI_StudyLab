@@ -29,6 +29,7 @@ namespace VARCO_Workshop
                 if (c == null || c.Count < requiredItems) return;
             }
             done = true;
+            Debug.Log($"[VARCO] '{o.name}'이(가) '{name}'에 닿아 클리어되었습니다.", this);
             if (clearClip) AudioSource.PlayClipAtPoint(clearClip, transform.position);
             if (GameManager.Instance) GameManager.Instance.TriggerClear();
         }

@@ -219,8 +219,10 @@ namespace VARCO_Workshop.Editor
         }
 
         /// <summary>HazardZone/GoalTrigger를 이미 가진 게임플레이 프리팹 두 개를 (없으면) 생성/갱신합니다.
-        /// 메쉬는 우선 큐브 — 나중에 실제 모델로 교체하려면 프리팹을 열어 자식 오브젝트만 바꾸면 됩니다.</summary>
-        static void EnsureGameplayPrefabs()
+        /// 메쉬는 우선 큐브 — 나중에 실제 모델로 교체하려면 프리팹을 열어 자식 오브젝트만 바꾸면 됩니다.
+        /// 씬은 전혀 건드리지 않습니다 — 프리팹만 다시 만들고 싶을 때 이 메뉴를 쓰세요.</summary>
+        [MenuItem("VARCO/테스트 씬/자석 게임플레이 프리팹만 갱신 (씬 건드리지 않음)")]
+        public static void EnsureGameplayPrefabs()
         {
             SavePrefab(HazardCubePrefabPath, BuildHazardCubeTemplate);
             SavePrefab(ClearCubePrefabPath, BuildClearCubeTemplate);
@@ -244,7 +246,7 @@ namespace VARCO_Workshop.Editor
         {
             var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
             go.name = "VARCO_ClearCube";
-            SetObjectColor(go, new Color(1f, 0.82f, 0.08f));
+            SetClearShimmerMaterial(go);
 
             var collider = go.GetComponent<Collider>();
             collider.isTrigger = true;
@@ -428,6 +430,31 @@ namespace VARCO_Workshop.Editor
             renderer.sharedMaterial = mat;
         }
 
+        /// <summary>반투명하게 일렁이는 클리어 큐브 전용 머티리얼(Assets/Shaders/VARCO_ClearShimmer.shader).
+        /// HazardBlackSea와 같은 파도 패턴을 쓰지만 투명 블렌딩 + 밝은 금색 톤으로 반대 느낌을 냅니다.</summary>
+        static void SetClearShimmerMaterial(GameObject go)
+        {
+            var renderer = go.GetComponentInChildren<Renderer>();
+            if (!renderer) return;
+
+            var shader = Shader.Find("VARCO/ClearShimmer");
+            if (!shader)
+            {
+                Debug.LogWarning("[VARCO 자석] VARCO/ClearShimmer 셰이더를 찾지 못해 기본 색으로 대체합니다.");
+                SetObjectColor(go, new Color(1f, 0.82f, 0.08f));
+                return;
+            }
+
+            // 이 경로에 예전 셰이더로 저장된 머티리얼이 이미 있으면 _BaseColor 등 값이 그대로 남아있을 수 있어
+            // (예: 알파 1로 불투명) 반투명 기본값을 명시적으로 다시 지정합니다.
+            var mat = GetOrCreateMaterial($"Assets/Materials/Magnet/{go.name}_Mat.mat", shader, m =>
+            {
+                m.SetColor("_BaseColor", new Color(1f, 0.85f, 0.3f, 0.5f));
+                m.SetColor("_ShimmerColor", new Color(1f, 0.98f, 0.82f, 0.85f));
+            });
+            renderer.sharedMaterial = mat;
+        }
+
         /// <summary>머티리얼을 실제 .mat 에셋 파일로 저장해서 반환합니다. new Material()을 만들어서
         /// Renderer에만 대입하고 끝내면(과거 방식) PrefabUtility.SaveAsPrefabAsset 시 참조가 저장되지 않고
         /// 비어버립니다(fileID: 0) — 그래서 색이 하나도 안 먹은 것처럼 보였던 원인입니다.
@@ -437,6 +464,8 @@ namespace VARCO_Workshop.Editor
             var existing = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (existing)
             {
+                if (existing.shader != shader)
+                    existing.shader = shader; // 이전에 다른 셰이더로 저장된 동일 경로 머티리얼을 재사용하는 경우 갱신
                 configure?.Invoke(existing);
                 EditorUtility.SetDirty(existing);
                 return existing;
