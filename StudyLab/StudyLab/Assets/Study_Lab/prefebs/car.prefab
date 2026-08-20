@@ -14,6 +14,8 @@ GameObject:
   - component: {fileID: 6987467578302128546}
   - component: {fileID: 1334846667664005534}
   - component: {fileID: 7828572560502754691}
+  - component: {fileID: 5621457196871236775}
+  - component: {fileID: 7649450121909063028}
   m_Layer: 0
   m_Name: car
   m_TagString: Untagged
@@ -133,6 +135,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VARCO_Workshop.MagnetTarget
   maxRange: 8
+  weight: 10
   aimTint: {r: 0.4, g: 0.9, b: 1, a: 1}
   selectedTint: {r: 1, g: 0.85, b: 0.1, a: 1}
   includeChildRenderers: 1
@@ -155,5 +158,49 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.44764596, y: 0.3547894, z: 0.903772}
-  m_Center: {x: 0.000011825562, y: -0.0036226034, z: 0}
+  m_Size: {x: 0.4476471, y: 0.297236, z: 0.5065806}
+  m_Center: {x: 0.000011798288, y: 0.019705579, z: -0.19859585}
+--- !u!65 &5621457196871236775
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 435287569099753762}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.4782826, y: 0.18185884, z: 0.8054451}
+  m_Center: {x: -0.0016400045, y: -0.029057298, z: 0.099056795}
+--- !u!136 &7649450121909063028
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 435287569099753762}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.13362035
+  m_Height: 0.41519198
+  m_Direction: 0
+  m_Center: {x: 0.0034206628, y: 0.027069712, z: 0.036779117}

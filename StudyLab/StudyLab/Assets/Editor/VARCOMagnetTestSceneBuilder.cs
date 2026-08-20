@@ -230,7 +230,7 @@ namespace VARCO_Workshop.Editor
         {
             var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
             go.name = "VARCO_HazardCube";
-            SetObjectColor(go, new Color(1f, 0.35f, 0.05f));
+            SetHazardSeaMaterial(go);
 
             var collider = go.GetComponent<Collider>();
             collider.isTrigger = true;
@@ -280,11 +280,19 @@ namespace VARCO_Workshop.Editor
 
         static void CreateLight()
         {
-            RenderSettings.ambientLight = new Color(0.55f, 0.58f, 0.62f);
+            // 단색(Flat) 대신 하늘/수평선/바닥 세 색을 쓰는 Trilight — 단조롭지 않고 입체감 있는 앰비언트
+            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
+            RenderSettings.ambientSkyColor = new Color(0.5f, 0.62f, 0.75f);
+            RenderSettings.ambientEquatorColor = new Color(0.45f, 0.46f, 0.48f);
+            RenderSettings.ambientGroundColor = new Color(0.25f, 0.24f, 0.22f);
+
             var lightGo = new GameObject("Directional Light");
             var light = lightGo.AddComponent<Light>();
             light.type = LightType.Directional;
-            light.intensity = 1.15f;
+            light.color = new Color(1f, 0.956f, 0.839f); // 살짝 따뜻한 햇빛 색온도
+            light.intensity = 1.2f;
+            light.shadows = LightShadows.Soft;
+            light.shadowStrength = 0.8f;
             lightGo.transform.rotation = Quaternion.Euler(50f, -35f, 0f);
         }
 
@@ -393,10 +401,55 @@ namespace VARCO_Workshop.Editor
             var renderer = go.GetComponentInChildren<Renderer>();
             if (!renderer) return;
             var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            var mat = new Material(shader) { name = go.name + "_Mat" };
-            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", color);
-            else if (mat.HasProperty("_Color")) mat.SetColor("_Color", color);
+            var mat = GetOrCreateMaterial($"Assets/Materials/Magnet/{go.name}_Mat.mat", shader, m =>
+            {
+                if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", color);
+                else if (m.HasProperty("_Color")) m.SetColor("_Color", color);
+            });
             renderer.sharedMaterial = mat;
+        }
+
+        /// <summary>검은 바다처럼 표면이 출렁이는 위험 큐브 전용 머티리얼(Assets/Shaders/VARCO_HazardBlackSea.shader).
+        /// 메쉬 자체는 그대로 큐브 — 정점을 살짝 흔들고, 프래그먼트에서 물결 하이라이트/Fresnel로 움직임을 표현합니다.</summary>
+        static void SetHazardSeaMaterial(GameObject go)
+        {
+            var renderer = go.GetComponentInChildren<Renderer>();
+            if (!renderer) return;
+
+            var shader = Shader.Find("VARCO/HazardBlackSea");
+            if (!shader)
+            {
+                Debug.LogWarning("[VARCO 자석] VARCO/HazardBlackSea 셰이더를 찾지 못해 기본 색으로 대체합니다.");
+                SetObjectColor(go, new Color(0.02f, 0.02f, 0.04f));
+                return;
+            }
+
+            var mat = GetOrCreateMaterial($"Assets/Materials/Magnet/{go.name}_Mat.mat", shader, null);
+            renderer.sharedMaterial = mat;
+        }
+
+        /// <summary>머티리얼을 실제 .mat 에셋 파일로 저장해서 반환합니다. new Material()을 만들어서
+        /// Renderer에만 대입하고 끝내면(과거 방식) PrefabUtility.SaveAsPrefabAsset 시 참조가 저장되지 않고
+        /// 비어버립니다(fileID: 0) — 그래서 색이 하나도 안 먹은 것처럼 보였던 원인입니다.
+        /// 반드시 이 함수처럼 디스크에 저장된 진짜 에셋을 참조하게 해야 합니다.</summary>
+        static Material GetOrCreateMaterial(string path, Shader shader, System.Action<Material> configure)
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (existing)
+            {
+                configure?.Invoke(existing);
+                EditorUtility.SetDirty(existing);
+                return existing;
+            }
+
+            var dir = System.IO.Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(dir) && !AssetDatabase.IsValidFolder(dir.Replace("\\", "/")))
+                System.IO.Directory.CreateDirectory(dir);
+
+            var mat = new Material(shader);
+            configure?.Invoke(mat);
+            AssetDatabase.CreateAsset(mat, path);
+            return mat;
         }
 
         static void SaveScene(Scene scene, string path)
