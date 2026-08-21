@@ -10,5 +10,6 @@ namespace VARCO_Workshop
         public static readonly int IsJump   = Animator.StringToHash("IsJump");
         public static readonly int IsAttack = Animator.StringToHash("IsAttack");
         public static readonly int IsDead   = Animator.StringToHash("IsDead");
+        public static readonly int InWater  = Animator.StringToHash("InWater");
     }
 }

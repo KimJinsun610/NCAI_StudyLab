@@ -90,7 +90,7 @@ CharacterController:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Height: 0.9
+  m_Height: 0.85
   m_Radius: 0.39251658
   m_SlopeLimit: 45
   m_StepOffset: 0.3
@@ -117,7 +117,7 @@ MonoBehaviour:
   lockZAxis: 0
   useCameraSpace: 1
   turnSpeed: 12
-  modelRoot: {fileID: 0}
+  modelRoot: {fileID: 8143747248430944092}
   respawnAtStartOnFall: 1
   fallRespawnY: -10
   qaInputOverrideActive: 0
@@ -141,6 +141,9 @@ MonoBehaviour:
   fallbackHitSound: {fileID: 0}
   deathSoundId: sfx_game_over
   fallbackDeathSound: {fileID: 0}
+  ragdollOnDeath: 1
+  ragdollToppleForce: 1.5
+  ragdollToppleTorque: 3
 --- !u!114 &7260749468303931540
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -263,7 +266,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VARCO_Workshop.CharacterInitialYAnchor
   syncInitialYFromSceneTransform: 1
-  initialY: 0
+  initialY: 2.7820003
   hasStoredInitialY: 1
   lockRootYDuringMovement: 0
   applyToNavMeshAgentBaseOffset: 0
@@ -420,7 +423,7 @@ Animator:
   m_GameObject: {fileID: 8813463472009041382}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 0a7d97aae67cd3747b1ec931f6041434, type: 2}
+  m_Controller: {fileID: 9100000, guid: 4e54c77469013764a9b55dd582f87f85, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0

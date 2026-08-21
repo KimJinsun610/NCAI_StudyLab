@@ -27,6 +27,8 @@ namespace VARCO_Workshop.Editor
         const string MagnetControllerPath = "Assets/Prefabs/Magnet/VARCO_MagnetPlayer_TeddyBear_Controller.controller";
         const string TeddyAimFbxPath = "Assets/Study_Lab/resouse/TeddyBear_Aim.fbx";
         const string AimClipPath = "Assets/Animations/Generated/test_character/test_character_Aim.anim";
+        const string TeddyDrowningFbxPath = "Assets/Study_Lab/resouse/TeddyBear_Drowning.fbx";
+        const string DrowningClipPath = "Assets/Animations/Generated/test_character/test_character_Drowning.anim";
 
         [MenuItem("VARCO/테스트 씬/자석 퍼즐 테스트 씬 생성")]
         public static void BuildMagnetTestScene()
@@ -93,7 +95,8 @@ namespace VARCO_Workshop.Editor
             magnet.aimRange = 10f;
 
             var aimClip = BuildAimClip();
-            WireMagnetAnimator(root, aimClip);
+            var drowningClip = BuildDrowningClip();
+            WireMagnetAnimator(root, aimClip, drowningClip);
 
             PrefabUtility.SaveAsPrefabAsset(root, MagnetPlayerPrefabPath);
             PrefabUtility.UnloadPrefabContents(root);
@@ -138,10 +141,44 @@ namespace VARCO_Workshop.Editor
             return copy;
         }
 
+        /// <summary>TeddyBear_Drowning.fbx에 들어있는 애니메이션 클립을 같은 방식으로 뽑아냅니다.</summary>
+        static AnimationClip BuildDrowningClip()
+        {
+            var sourceClip = AssetDatabase.LoadAllAssetsAtPath(TeddyDrowningFbxPath)
+                .OfType<AnimationClip>()
+                .FirstOrDefault(c => !c.name.StartsWith("__preview__"));
+            if (!sourceClip)
+            {
+                Debug.LogError("[VARCO 자석] TeddyBear_Drowning.fbx에서 애니메이션 클립을 찾지 못했습니다: " + TeddyDrowningFbxPath);
+                return null;
+            }
+
+            var dir = System.IO.Path.GetDirectoryName(DrowningClipPath);
+            if (!string.IsNullOrEmpty(dir) && !AssetDatabase.IsValidFolder(dir.Replace("\\", "/")))
+                System.IO.Directory.CreateDirectory(dir);
+
+            AssetDatabase.DeleteAsset(DrowningClipPath);
+
+            var copy = new AnimationClip();
+            EditorUtility.CopySerialized(sourceClip, copy);
+            copy.name = "test_character_Drowning";
+
+            // 물에 있는 동안 계속 유지되는 상태라 반복 재생시킵니다.
+            copy.wrapMode = WrapMode.Loop;
+            var clipSettings = AnimationUtility.GetAnimationClipSettings(copy);
+            clipSettings.loopTime = true;
+            clipSettings.loopBlend = true;
+            AnimationUtility.SetAnimationClipSettings(copy, clipSettings);
+
+            AssetDatabase.CreateAsset(copy, DrowningClipPath);
+            return copy;
+        }
+
         /// <summary>원본 test_character_Controller를 복제해서 자석 프리팹 전용 컨트롤러로 쓰고,
-        /// 비어있던 Attack 스테이트에 자석 사용 애니메이션을 연결합니다. 원본 컨트롤러(다른 씬에서도
-        /// 쓰일 수 있음)는 건드리지 않기 위해 반드시 복제본에서만 작업합니다.</summary>
-        static void WireMagnetAnimator(GameObject root, AnimationClip aimClip)
+        /// 비어있던 Attack 스테이트에 자석 사용 애니메이션을, 새 Drowning 스테이트에 물에 빠졌을 때
+        /// 애니메이션을 연결합니다. 원본 컨트롤러(다른 씬에서도 쓰일 수 있음)는 건드리지 않기 위해
+        /// 반드시 복제본에서만 작업합니다.</summary>
+        static void WireMagnetAnimator(GameObject root, AnimationClip aimClip, AnimationClip drowningClip)
         {
             var animator = root.GetComponentInChildren<Animator>(true);
             if (!animator)
@@ -208,7 +245,42 @@ namespace VARCO_Workshop.Editor
             exit.offset = 0f;
             exit.AddCondition(AnimatorConditionMode.IfNot, 0f, "IsAttack");
 
+            if (drowningClip)
+                WireDrowningState(controller, sm, idleState, drowningClip);
+
             EditorUtility.SetDirty(controller);
+        }
+
+        /// <summary>물(위험 구역)에 들어가면 재생되는 Drowning 스테이트를 새로 만들어 연결합니다.
+        /// 다른 애니메이션(점프/자석 사용/걷기)보다 후순위여야 하므로 AnyState 목록 맨 뒤에 추가하고,
+        /// 조건에도 그 상태들이 아닐 때만(IfNot) 켜지도록 명시적으로 제외합니다.</summary>
+        static void WireDrowningState(AnimatorController controller, AnimatorStateMachine sm, AnimatorState idleState, AnimationClip drowningClip)
+        {
+            if (!controller.parameters.Any(p => p.name == "InWater"))
+                controller.AddParameter("InWater", AnimatorControllerParameterType.Bool);
+
+            var drowningState = sm.states.FirstOrDefault(s => s.state.name == "Drowning").state;
+            if (!drowningState)
+                drowningState = sm.AddState("Drowning", new Vector3(520, 500, 0));
+            drowningState.motion = drowningClip;
+
+            var enter = sm.AddAnyStateTransition(drowningState);
+            enter.hasExitTime = false;
+            enter.hasFixedDuration = true;
+            enter.duration = 0.15f;
+            enter.offset = 0f;
+            enter.canTransitionToSelf = false;
+            enter.AddCondition(AnimatorConditionMode.If, 0f, "InWater");
+            enter.AddCondition(AnimatorConditionMode.IfNot, 0f, "IsJump");
+            enter.AddCondition(AnimatorConditionMode.IfNot, 0f, "IsAttack");
+            enter.AddCondition(AnimatorConditionMode.IfNot, 0f, "IsWalk");
+
+            var exit = drowningState.AddTransition(idleState);
+            exit.hasExitTime = false;
+            exit.hasFixedDuration = true;
+            exit.duration = 0.15f;
+            exit.offset = 0f;
+            exit.AddCondition(AnimatorConditionMode.IfNot, 0f, "InWater");
         }
 
         static void CreateGameManager()
@@ -216,6 +288,10 @@ namespace VARCO_Workshop.Editor
             var core = new GameObject("VW_Bootstrap");
             var gm = core.AddComponent<GameManager>();
             gm.loadResultScenes = false;
+            // 이 프로젝트는 별도 Clear/GameOver 씬 없이 같은 씬을 재시작하는 구조라서,
+            // GameManager가 DontDestroyOnLoad로 살아남으면 재시작 후에도 state가 GameOver에 고정된 채라
+            // 두 번째 죽음부터는 TriggerGameOver()가 다시 발동하지 않습니다. 씬 재시작 시 항상 새로 만들어지게.
+            gm.persistAcrossScenes = false;
         }
 
         /// <summary>HazardZone/GoalTrigger를 이미 가진 게임플레이 프리팹 두 개를 (없으면) 생성/갱신합니다.
@@ -239,6 +315,7 @@ namespace VARCO_Workshop.Editor
 
             var hazard = go.AddComponent<HazardZone>();
             hazard.damagePerSecond = 1;
+            go.AddComponent<WaterAnimationTrigger>();
             return go;
         }
 
