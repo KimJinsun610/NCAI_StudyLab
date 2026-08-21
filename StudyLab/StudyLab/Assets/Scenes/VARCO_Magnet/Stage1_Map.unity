@@ -306,7 +306,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 0}
+  m_Resource: {fileID: 8300000, guid: 93d898bb6b0ede548aa958e49a8ae628, type: 3}
   m_PlayOnAwake: 1
   m_Volume: 1
   m_Pitch: 1
@@ -1001,7 +1001,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 0}
+  m_Resource: {fileID: 8300000, guid: 338fb204969d00e46839d97013b3179a, type: 3}
   m_PlayOnAwake: 1
   m_Volume: 1
   m_Pitch: 1
@@ -2492,17 +2492,21 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 733563501899769825, guid: b664076e45e662944b214ab3a3da70ed, type: 3}
+      propertyPath: pickupClip
+      value: 
+      objectReference: {fileID: 8300000, guid: 6d8d6c1ea99ab1f48b522594b74b552f, type: 3}
     - target: {fileID: 1112509943201506834, guid: b664076e45e662944b214ab3a3da70ed, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -5.77
+      value: -11.340001
       objectReference: {fileID: 0}
     - target: {fileID: 1112509943201506834, guid: b664076e45e662944b214ab3a3da70ed, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 3.022
+      value: 4.87
       objectReference: {fileID: 0}
     - target: {fileID: 1112509943201506834, guid: b664076e45e662944b214ab3a3da70ed, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 15.24
+      value: -12.730001
       objectReference: {fileID: 0}
     - target: {fileID: 1112509943201506834, guid: b664076e45e662944b214ab3a3da70ed, type: 3}
       propertyPath: m_LocalRotation.w
@@ -3090,15 +3094,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6682093786644034920, guid: 2ff5e737e0038774e8929bf7e28d184f, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -6.7799993
+      value: -12.35
       objectReference: {fileID: 0}
     - target: {fileID: 6682093786644034920, guid: 2ff5e737e0038774e8929bf7e28d184f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 2.7820003
+      value: 4.52
       objectReference: {fileID: 0}
     - target: {fileID: 6682093786644034920, guid: 2ff5e737e0038774e8929bf7e28d184f, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 15.450001
+      value: -12.52
       objectReference: {fileID: 0}
     - target: {fileID: 6682093786644034920, guid: 2ff5e737e0038774e8929bf7e28d184f, type: 3}
       propertyPath: m_LocalRotation.w
@@ -3309,6 +3313,10 @@ PrefabInstance:
       propertyPath: m_ConstrainProportionsScale
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2866830910294659100, guid: 335ab61180ecc2f42a10f655690f0ca6, type: 3}
+      propertyPath: clearClip
+      value: 
+      objectReference: {fileID: 8300000, guid: 21754f6c3ea53cf4d821ad689b90bc21, type: 3}
     - target: {fileID: 2866830910294659100, guid: 335ab61180ecc2f42a10f655690f0ca6, type: 3}
       propertyPath: requiredItems
       value: 0
