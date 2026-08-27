@@ -32,9 +32,21 @@ namespace VARCO_Workshop
         [Tooltip("능력 습득 시 장착할 자석 모델(선택). 비워두면 시각적 변화 없이 기능만 켜집니다.")]
         public GameObject magnetMeshPrefab;
         [Tooltip("자석 모델을 붙일 위치(예: 손 뼈대). 비워두면 플레이어 자기 자신에 붙입니다.")]
+
+
         public Transform magnetMeshAttachPoint;
         public Vector3 magnetMeshLocalPosition;
         public Vector3 magnetMeshLocalEulerAngles;
+
+        [Header("사운드")]
+        [Tooltip("오브젝트를 잡는 순간 1회 재생 (예: Wave_mag)")]
+        public AudioClip attachClip;
+        [Tooltip("오브젝트를 조작하는 동안 반복 재생 (예: MergnetMove)")]
+        public AudioClip moveLoopClip;
+        [Range(0f, 1f)] public float moveLoopVolume = 0.6f;
+        
+        AudioSource moveLoopSource;
+
 
         public MagnetTarget CurrentAimTarget { get; private set; }
         public MagnetTarget AttachedTarget { get; private set; }
@@ -51,6 +63,12 @@ namespace VARCO_Workshop
             playerMover = GetComponent<IExternalMoveOverride>();
             anim = RuntimeAnimatorResolver.FindBestAnimator(gameObject);
             CrosshairUI.EnsureExists();
+
+            moveLoopSource = gameObject.AddComponent<AudioSource>();
+            moveLoopSource.playOnAwake = false;
+            moveLoopSource.loop = true;
+            moveLoopSource.clip = moveLoopClip;
+            moveLoopSource.volume = moveLoopVolume;
         }
 
         /// <summary>아이템 픽업 등에서 호출 — 자석 기능을 켜고, 설정된 모델이 있으면 장착합니다.</summary>
@@ -137,6 +155,9 @@ namespace VARCO_Workshop
                 playerMover.SetQaMoveInput(Vector2.zero, false);
 
             if (anim) anim.SetBool(PlayerAnimParams.IsAttack, true);
+
+            if (attachClip) AudioSource.PlayClipAtPoint(attachClip, transform.position);
+            if (moveLoopClip) moveLoopSource.Play();
         }
 
         void Release()
@@ -154,6 +175,7 @@ namespace VARCO_Workshop
                 playerMover.ClearQaMoveInput();
 
             if (anim) anim.SetBool(PlayerAnimParams.IsAttack, false);
+            if (moveLoopSource.isPlaying) moveLoopSource.Stop();
         }
 
         void FixedUpdate()

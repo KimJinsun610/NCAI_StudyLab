@@ -109,7 +109,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ac48ed55b803044b97c1748c9d580e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VARCO_Workshop.PlayerController_Platform
-  moveSpeed: 6
+  moveSpeed: 3
   runMultiplier: 1.35
   runKey: 304
   jumpForce: 8

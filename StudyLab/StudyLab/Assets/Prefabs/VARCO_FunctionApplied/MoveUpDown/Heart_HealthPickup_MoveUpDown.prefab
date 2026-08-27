@@ -1,0 +1,108 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &8612412653885265741
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4197613396839584272, guid: 5759faa0717620c468f8cafa92e18e50, type: 3}
+      propertyPath: role
+      value: MovingObject
+      objectReference: {fileID: 0}
+    - target: {fileID: 4197613396839584272, guid: 5759faa0717620c468f8cafa92e18e50, type: 3}
+      propertyPath: prefabPreset
+      value: MoveUpDown
+      objectReference: {fileID: 0}
+    - target: {fileID: 4197613396839584272, guid: 5759faa0717620c468f8cafa92e18e50, type: 3}
+      propertyPath: validationPassed
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4197613396839584272, guid: 5759faa0717620c468f8cafa92e18e50, type: 3}
+      propertyPath: validationSummary
+      value: "FIX: \uD68C\uBCF5 \uC544\uC774\uD15C \uAE30\uB2A5\uC5D0\uB294 Trigger
+        BoxCollider\uAC00 \uD544\uC694\uD569\uB2C8\uB2E4.\n\uC790\uB3D9 \uC218\uC815\uC774
+        \uAC00\uB2A5\uD55C \uD56D\uBAA9\uC740 \uCC98\uB9AC\uD588\uC2B5\uB2C8\uB2E4."
+      objectReference: {fileID: 0}
+    - target: {fileID: 4197613396839584272, guid: 5759faa0717620c468f8cafa92e18e50, type: 3}
+      propertyPath: appliedFeatures.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4197613396839584272, guid: 5759faa0717620c468f8cafa92e18e50, type: 3}
+      propertyPath: 'appliedFeatures.Array.data[1]'
+      value: PingPongMotion
+      objectReference: {fileID: 0}
+    - target: {fileID: 4432237552766067665, guid: 5759faa0717620c468f8cafa92e18e50, type: 3}
+      propertyPath: m_Name
+      value: Heart_HealthPickup_MoveUpDown
+      objectReference: {fileID: 0}
+    - target: {fileID: 7712338663889377937, guid: 5759faa0717620c468f8cafa92e18e50, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -11.21
+      objectReference: {fileID: 0}
+    - target: {fileID: 7712338663889377937, guid: 5759faa0717620c468f8cafa92e18e50, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.95
+      objectReference: {fileID: 0}
+    - target: {fileID: 7712338663889377937, guid: 5759faa0717620c468f8cafa92e18e50, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.52
+      objectReference: {fileID: 0}
+    - target: {fileID: 7712338663889377937, guid: 5759faa0717620c468f8cafa92e18e50, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7712338663889377937, guid: 5759faa0717620c468f8cafa92e18e50, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7712338663889377937, guid: 5759faa0717620c468f8cafa92e18e50, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7712338663889377937, guid: 5759faa0717620c468f8cafa92e18e50, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7712338663889377937, guid: 5759faa0717620c468f8cafa92e18e50, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7712338663889377937, guid: 5759faa0717620c468f8cafa92e18e50, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7712338663889377937, guid: 5759faa0717620c468f8cafa92e18e50, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4432237552766067665, guid: 5759faa0717620c468f8cafa92e18e50, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7909613881471404979}
+  m_SourcePrefab: {fileID: 100100000, guid: 5759faa0717620c468f8cafa92e18e50, type: 3}
+--- !u!1 &5334257845698147484 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4432237552766067665, guid: 5759faa0717620c468f8cafa92e18e50, type: 3}
+  m_PrefabInstance: {fileID: 8612412653885265741}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &7909613881471404979
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5334257845698147484}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2756794e7a01d24aa5271ddf58fa947, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VARCO_Workshop.PrefabPingPongMotion
+  localOffset: {x: 0, y: 1.54, z: 0}
+  speed: 1.18
+  carryCharacterControllers: 1

@@ -5,7 +5,7 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Study_Lab/StudyScene.unity
     guid: 4548f5cf77c3b99428f7969db13aa9b6
   m_configObjects:

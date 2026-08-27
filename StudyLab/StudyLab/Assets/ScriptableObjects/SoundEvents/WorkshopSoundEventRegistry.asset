@@ -12,4 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c496dc36bb1ed24abf0fcf970246be4, type: 3}
   m_Name: WorkshopSoundEventRegistry
   m_EditorClassIdentifier: Assembly-CSharp::VARCO_Workshop.SoundEventRegistry
-  events: []
+  events:
+  - id: sfx_doll_wal
+    clip: {fileID: 8300000, guid: 14279a332dd438041a015c266cf8e077, type: 3}
+    volume: 1

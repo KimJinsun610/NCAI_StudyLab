@@ -42,8 +42,12 @@ namespace VARCO_Workshop
 
         void OnTriggerEnter(Collider other)
         {
-            if (!TryGetPlayerHealth(other, out _)) return;
+            if (!TryGetPlayerHealth(other, out var ph)) return;
             if (enterClip) AudioSource.PlayClipAtPoint(enterClip, transform.position);
+
+            // 닿는 즉시 1틱 데미지
+            ph.TakeDamage(damagePerSecond);
+            processedFrames[ph] = Time.frameCount;
         }
 
         void OnTriggerStay(Collider other)

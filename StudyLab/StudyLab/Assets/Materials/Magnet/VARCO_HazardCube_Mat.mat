@@ -31,8 +31,8 @@ Material:
     - _RippleScale: 4
     - _RippleSpeed: 1.5
     m_Colors:
-    - _BaseColor: {r: 0.01, g: 0.01, b: 0.02, a: 1}
-    - _FresnelColor: {r: 0.19999996, g: 0.27999997, b: 0.39999998, a: 1}
-    - _RippleColor: {r: 0.11999995, g: 0.15999997, b: 0.23999995, a: 1}
+    - _BaseColor: {r: 0, g: 0, b: 0, a: 1}
+    - _FresnelColor: {r: 0.28385192, g: 0.31608164, b: 0.3660378, a: 1}
+    - _RippleColor: {r: 0.10746165, g: 0.12069768, b: 0.14716971, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
